@@ -98,3 +98,32 @@ export const IssueList = styled.ul`
     }
   }
 `;
+
+export const PageButtons = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+`;
+
+export const Button = styled.button.attrs(props => ({
+  type: 'button',
+  disabled: props.disabled,
+  onClick: props.onClick,
+}))`
+  background: #7159c1;
+  color: #fff;
+  border: 0;
+  padding: 10px;
+  &[disabled] {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+`;
+
+export const StateButtons = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+`;

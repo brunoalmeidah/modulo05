@@ -2,7 +2,14 @@ import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import api from '../../services/api';
-import { Loading, Owner, IssueList } from './styles';
+import {
+  Loading,
+  Owner,
+  IssueList,
+  PageButtons,
+  Button,
+  StateButtons,
+} from './styles';
 import Container from '../../components/Container';
 
 export default class Repository extends Component {
@@ -18,6 +25,9 @@ export default class Repository extends Component {
     repository: {},
     issues: [],
     loading: 1,
+    buttonDisabled: 1,
+    page: 1,
+    state: 'open',
   };
 
   async componentDidMount() {
@@ -33,6 +43,7 @@ export default class Repository extends Component {
         params: {
           state: 'open',
           per_page: 5,
+          page: 1,
         },
       }),
     ]);
@@ -44,8 +55,50 @@ export default class Repository extends Component {
     });
   }
 
+  // componentDidUpdate(_, prevState) {}
+
+  handlePageButtonClick = async numberPage => {
+    const { page, repository, state } = this.state;
+    const newPage = page + numberPage;
+    const issues = await api.get(`/repos/${repository.full_name}/issues`, {
+      params: {
+        state,
+        per_page: 5,
+        page: newPage,
+      },
+    });
+    const buttonDisabled = newPage > 1 ? 0 : 1;
+
+    this.setState({ issues: issues.data, page: newPage, buttonDisabled });
+  };
+
+  handleStateButtonClick = async state => {
+    const { repository } = this.state;
+
+    const issues = await api.get(`/repos/${repository.full_name}/issues`, {
+      params: {
+        state,
+        per_page: 5,
+        page: 1,
+      },
+    });
+    this.setState({
+      issues: issues.data,
+      page: 1,
+      buttonDisabled: 1,
+      state,
+    });
+  };
+
   render() {
-    const { repository, issues, loading } = this.state;
+    const {
+      repository,
+      issues,
+      loading,
+      buttonDisabled,
+      page,
+      state,
+    } = this.state;
     if (loading) {
       return <Loading>Carregando</Loading>;
     }
@@ -57,6 +110,26 @@ export default class Repository extends Component {
           <h1>{repository.name}</h1>
           <p>{repository.description}</p>
         </Owner>
+        <StateButtons>
+          <Button
+            disabled={state === 'open'}
+            onClick={() => this.handleStateButtonClick('open')}
+          >
+            Open
+          </Button>
+          <Button
+            disabled={state === 'closed'}
+            onClick={() => this.handleStateButtonClick('closed')}
+          >
+            Closed
+          </Button>
+          <Button
+            disabled={state === 'all'}
+            onClick={() => this.handleStateButtonClick('all')}
+          >
+            All
+          </Button>
+        </StateButtons>
         <IssueList>
           {issues.map(issue => (
             <li key={String(issue.id)}>
@@ -73,6 +146,16 @@ export default class Repository extends Component {
             </li>
           ))}
         </IssueList>
+        <PageButtons>
+          <Button
+            disabled={buttonDisabled}
+            onClick={() => this.handlePageButtonClick(-1)}
+          >
+            Anterior
+          </Button>
+          <span>Page : {page}</span>
+          <Button onClick={() => this.handlePageButtonClick(1)}>Próximo</Button>
+        </PageButtons>
       </Container>
     );
   }
